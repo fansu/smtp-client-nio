@@ -10,6 +10,8 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.yahoo.smtpnio.async.exception.SmtpAsyncClientException;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -107,7 +109,8 @@ public class MailCommand extends AbstractSmtpCommand {
 
     @Nonnull
     @Override
-    public ByteBuf getCommandLineBytes() {
+    public ByteBuf getCommandLineBytes() throws SmtpAsyncClientException {
+        validateArgument(sender, "sender");
         // space, colon, left and right angle brackets make up 4 of extra chars; padding is added to account for possible additional arguments
         final int len = command.length() + FROM.length() + sender.length() + CRLF_B.length + SmtpClientConstants.PADDING_LEN;
         final ByteBuf res = Unpooled.buffer(len)
@@ -121,9 +124,11 @@ public class MailCommand extends AbstractSmtpCommand {
 
         if (mailParameters != null) { // adds the additional mail parameters if available
             for (final MailParameter mailParameter : mailParameters) {
+                validateArgument(mailParameter.keyword, "mail parameter keyword");
                 res.writeByte(SmtpClientConstants.SPACE)
                         .writeBytes(mailParameter.keyword.getBytes(StandardCharsets.US_ASCII));
                 if (mailParameter.value != null) {
+                    validateArgument(mailParameter.value, "mail parameter value");
                     res.writeByte(SmtpClientConstants.EQUAL)
                             .writeBytes(mailParameter.value.getBytes(StandardCharsets.US_ASCII));
                 }

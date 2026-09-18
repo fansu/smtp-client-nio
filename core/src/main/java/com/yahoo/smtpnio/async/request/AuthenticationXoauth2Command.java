@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.yahoo.smtpnio.async.exception.SmtpAsyncClientException;
 import com.yahoo.smtpnio.async.response.SmtpResponse;
 
 import io.netty.buffer.ByteBuf;
@@ -56,7 +57,10 @@ public class AuthenticationXoauth2Command extends AbstractAuthenticationCommand 
 
     @Nonnull
     @Override
-    public ByteBuf getCommandLineBytes() {
+    public ByteBuf getCommandLineBytes() throws SmtpAsyncClientException {
+        // SOH separates the fields of the payload below, so a control character in either argument would inject an extra field
+        validateArgument(username, "username");
+        validateArgument(token, "access token");
         // XOAUTH2 format: "user={username}^Aauth=Bearer {token}^A^A"
         final String commandStr = new StringBuilder()
                 .append(USER_EQUAL).append(username).append(SmtpClientConstants.SOH)

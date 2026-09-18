@@ -82,11 +82,12 @@ public class AuthenticationLoginCommand extends AbstractAuthenticationCommand {
                     new StringBuilder("server replies an error: ").append(serverResponse).toString());
         }
         final String input;
+        // each credential is sent verbatim as its own command line, so it must not carry a line terminator
         if (nextInputState == InputState.USERNAME) {
-            input = username;
+            input = validateArgument(username, "username");
             nextInputState = InputState.PASSWORD;
         } else if (nextInputState == InputState.PASSWORD) {
-            input = password;
+            input = validateArgument(password, "password");
             nextInputState = InputState.COMPLETED;
         } else { // COMPLETED state, normal execution should not reach here
             throw new SmtpAsyncClientException(
